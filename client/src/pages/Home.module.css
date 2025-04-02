@@ -1,0 +1,112 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.hero {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    margin-bottom: 4rem;
+}
+
+.title {
+    font-size: 3rem;
+    color: #333;
+    margin: 0 0 1rem 0;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: #666;
+    margin: 0 0 2rem 0;
+}
+
+.authButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-size: 1rem;
+    text-decoration: none;
+    color: #007bff;
+    transition: all 0.2s;
+}
+
+.button:hover {
+    background-color: #f8f9fa;
+}
+
+.primaryButton {
+    background-color: #007bff;
+    color: white;
+}
+
+.primaryButton:hover {
+    background-color: #0056b3;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.feature {
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featureTitle {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0 0 1rem 0;
+}
+
+.featureDescription {
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .hero {
+        padding: 2rem 1rem;
+    }
+    
+    .title {
+        font-size: 2rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+    }
+    
+    .authButtons {
+        flex-direction: column;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+    }
+} 
