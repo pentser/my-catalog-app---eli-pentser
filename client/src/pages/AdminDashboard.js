@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { productsAPI, usersAPI } from '../services/api';
+import { productsAPI, usersAPI } from '../api';
 import styles from './AdminDashboard.module.css';
 
 const AdminDashboard = () => {
@@ -17,17 +17,21 @@ const AdminDashboard = () => {
 
     const fetchStats = async () => {
         try {
-            const [products, users] = await Promise.all([
+            const [productsResponse, usersResponse] = await Promise.all([
                 productsAPI.getAll(),
                 usersAPI.getAll()
             ]);
 
+            const products = productsResponse.data.products || [];
+            const users = usersResponse.data || [];
+
             setStats({
-                totalProducts: products.length,
+                totalProducts: productsResponse.data.totalProducts || 0,
                 totalUsers: users.length,
-                activeProducts: products.filter(p => p.isActive).length
+                activeProducts: products.filter(p => p.status).length
             });
         } catch (err) {
+            console.error('Error fetching dashboard stats:', err);
             setError('שגיאה בטעינת נתוני לוח הבקרה');
         }
     };
@@ -56,22 +60,16 @@ const AdminDashboard = () => {
             </div>
 
             <div className={styles.actionsGrid}>
-                <Link to="/admin/products" className={styles.actionCard}>
+                <Link to="/products/edit" className={styles.actionCard}>
                     <h2 className={styles.actionTitle}>ניהול מוצרים</h2>
                     <p className={styles.actionDescription}>
                         הוסף, ערוך או מחק מוצרים מהמערכת
                     </p>
                 </Link>
-                <Link to="/admin/users" className={styles.actionCard}>
-                    <h2 className={styles.actionTitle}>ניהול משתמשים</h2>
+                <Link to="/products/delete" className={styles.actionCard}>
+                    <h2 className={styles.actionTitle}>מחיקת מוצרים</h2>
                     <p className={styles.actionDescription}>
-                        צפה ברשימת המשתמשים וניהול הרשאות
-                    </p>
-                </Link>
-                <Link to="/admin/orders" className={styles.actionCard}>
-                    <h2 className={styles.actionTitle}>ניהול הזמנות</h2>
-                    <p className={styles.actionDescription}>
-                        צפה בהזמנות וניהול סטטוס ההזמנות
+                        מחק מוצרים מהמערכת
                     </p>
                 </Link>
             </div>
