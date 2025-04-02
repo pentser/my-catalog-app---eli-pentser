@@ -9,7 +9,9 @@ const Register = () => {
         password: '',
         first_name: '',
         last_name: '',
-        email: ''
+        email: '',
+        birth_date: '',
+        isAdmin: false
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -97,6 +99,39 @@ const Register = () => {
                         required
                         disabled={loading}
                     />
+                    <input
+                        type="date"
+                        className={styles.formField}
+                        name="birth_date"
+                        value={formData.birth_date}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                    />
+                    <div className={styles.radioGroup}>
+                        <label className={styles.radioLabel}>
+                            <input
+                                type="radio"
+                                name="isAdmin"
+                                value="false"
+                                checked={!formData.isAdmin}
+                                onChange={handleChange}
+                                disabled
+                            />
+                            משתמש רגיל
+                        </label>
+                        <label className={styles.radioLabel}>
+                            <input
+                                type="radio"
+                                name="isAdmin"
+                                value="true"
+                                checked={formData.isAdmin}
+                                onChange={handleChange}
+                                disabled
+                            />
+                            מנהל מערכת
+                        </label>
+                    </div>
                     <button
                         type="submit"
                         className={styles.submitButton}
