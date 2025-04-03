@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { registerSchema, loginSchema } = require('../validation/auth');
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -11,29 +12,16 @@ const generateToken = (user) => {
 
 const register = async (req, res) => {
     try {
-        const { user_name, first_name, last_name, email, birth_date, password } = req.body;
-
-        // Validate required fields
-        if (!user_name || !first_name || !last_name || !email || !birth_date || !password) {
+        // Validate request body
+        const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
+        if (error) {
+            const errors = error.details.map(detail => detail.message);
             return res.status(400).json({
-                error: 'All fields are required'
+                error: errors.join(', ')
             });
         }
 
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                error: 'Invalid email format'
-            });
-        }
-
-        // Validate password length
-        if (password.length < 6) {
-            return res.status(400).json({
-                error: 'Password must be at least 6 characters long'
-            });
-        }
+        const { user_name, first_name, last_name, email, birth_date, password } = value;
 
         // Check if user already exists
         const existingUser = await User.findOne({ 
@@ -42,19 +30,20 @@ const register = async (req, res) => {
 
         if (existingUser) {
             return res.status(400).json({ 
-                error: 'User with this email or username already exists' 
+                error: 'משתמש עם אימייל או שם משתמש זה כבר קיים במערכת' 
             });
         }
 
         // Create new user
         const user = new User({
-            user_id: Date.now(), // Simple way to generate unique ID
+            user_id: Date.now(),
             user_name,
             first_name,
             last_name,
             email,
             birth_date: new Date(birth_date),
-            password
+            password,
+            isAdmin: false // Always set to false for new registrations
         });
 
         await user.save();
@@ -74,24 +63,26 @@ const register = async (req, res) => {
     } catch (error) {
         console.error('Registration error:', error);
         res.status(400).json({ 
-            error: error.message || 'Registration failed' 
+            error: error.message || 'ההרשמה נכשלה' 
         });
     }
 };
 
 const login = async (req, res) => {
     try {
-        const { user_name, password } = req.body;
-
-        // Debug log
-        console.log('Login attempt:', { user_name, password });
-
-        // Validate required fields
-        if (!user_name || !password) {
+        // Validate request body
+        const { error, value } = loginSchema.validate(req.body, { abortEarly: false });
+        if (error) {
+            const errors = error.details.map(detail => detail.message);
             return res.status(400).json({
-                error: 'Username and password are required'
+                error: errors.join(', ')
             });
         }
+
+        const { user_name, password } = value;
+
+        // Debug log
+        console.log('Login attempt:', { user_name });
 
         // Find user
         const user = await User.findOne({ user_name });
@@ -100,7 +91,7 @@ const login = async (req, res) => {
         console.log('User found:', user ? 'Yes' : 'No');
         
         if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
         // Check password
@@ -110,7 +101,7 @@ const login = async (req, res) => {
         console.log('Password match:', isMatch ? 'Yes' : 'No');
         
         if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
         // Generate token
@@ -130,7 +121,7 @@ const login = async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(400).json({ 
-            error: error.message || 'Login failed' 
+            error: error.message || 'ההתחברות נכשלה' 
         });
     }
 };

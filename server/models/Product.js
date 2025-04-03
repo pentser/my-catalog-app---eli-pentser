@@ -26,7 +26,6 @@ const productSchema = new mongoose.Schema({
     current_stock_level: {
         type: Number,
         required: true,
-        min: 0
     }
 }, {
     timestamps: true
