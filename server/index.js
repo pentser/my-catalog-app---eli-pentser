@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const seedProducts = require('./seed/products');
 const seedUsers = require('./seed/users');
 
@@ -11,6 +12,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
+
 // MongoDB Connection Options
 const mongooseOptions = {
     useNewUrlParser: true,
@@ -18,7 +24,7 @@ const mongooseOptions = {
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
     family: 4,
-    dbName: 'productsDB' // Explicitly set database name
+    dbName: 'productsDB'
 };
 
 // MongoDB Connection
@@ -26,11 +32,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsD
     .then(async () => {
         console.log('Connected to MongoDB');
         
-        // Seed data
-        await seedUsers();
-        await seedProducts();
-        
-        console.log('Data seeding completed');
+        // Seed data only in development
+        if (process.env.NODE_ENV !== 'production') {
+            await seedUsers();
+            await seedProducts();
+            console.log('Data seeding completed');
+        }
     })
     .catch((error) => {
         console.error('MongoDB connection error:', error);
@@ -66,6 +73,13 @@ process.on('SIGINT', async () => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/users', require('./routes/users'));
+
+// Serve React app for any other routes in production
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
