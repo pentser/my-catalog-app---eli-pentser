@@ -16,7 +16,7 @@ app.get('/health', (req, res) => {
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://elipentser.info']
+        ? ['https://catalog-app-b6cx9.ondigitalocean.app']
         : ['http://localhost:3000'],
     credentials: true,
     optionsSuccessStatus: 200
@@ -25,6 +25,12 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
@@ -55,7 +61,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsD
     })
     .catch((error) => {
         console.error('MongoDB connection error:', error);
-        process.exit(1);
+        // Don't exit the process, just log the error
+        console.error('Failed to connect to MongoDB, will retry...');
     });
 
 // Handle MongoDB connection events
@@ -97,11 +104,21 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
+    console.error('Error occurred:', err);
+    console.error('Stack trace:', err.stack);
+    console.error('Request path:', req.path);
+    console.error('Request method:', req.method);
+    console.error('Request headers:', req.headers);
+    
+    res.status(500).json({ 
+        error: 'Something went wrong!',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Not set'}`);
 }); 

@@ -10,6 +10,10 @@ RUN npm run build
 # Stage 2: Build and run server
 FROM node:18.19.1-slim
 WORKDIR /app
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 COPY server/package*.json ./
 RUN npm install --production --legacy-peer-deps
 COPY server/ ./
