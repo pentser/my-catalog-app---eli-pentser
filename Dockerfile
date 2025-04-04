@@ -21,5 +21,11 @@ COPY --from=client-builder /app/client/build ./public
 COPY .env ./
 
 ENV NODE_ENV=production
+ENV PORT=5000
 EXPOSE 5000
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s \
+  CMD curl -f http://localhost:5000/health || exit 1
+
 CMD ["npm", "start"] 

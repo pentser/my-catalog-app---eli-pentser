@@ -8,6 +8,11 @@ const seedUsers = require('./seed/users');
 
 const app = express();
 
+// Health Check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
+});
+
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production' 
@@ -97,6 +102,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 }); 
