@@ -6,7 +6,8 @@ const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json'
-    }
+    },
+    withCredentials: true
 });
 
 // Add token to requests if it exists
@@ -21,27 +22,27 @@ api.interceptors.request.use((config) => {
 // Auth API
 export const authAPI = {
     register: (userData) => api.post('/auth/register', userData),
-    login: (credentials) => api.post('/auth/login', credentials)
+    login: (credentials) => api.post('/auth/login', credentials),
+    logout: () => api.post('/auth/logout'),
+    verifyToken: () => api.get('/auth/verify')
 };
 
 // Products API
 export const productsAPI = {
-    getAll: (page = 1, limit = 12) => api.get(`/products?page=${page}&limit=${limit}`),
+    getAll: () => api.get('/products'),
     getById: (id) => api.get(`/products/${id}`),
     create: (productData) => api.post('/products', productData),
     update: (id, productData) => api.put(`/products/${id}`, productData),
     delete: (id) => api.delete(`/products/${id}`),
-    search: (query, page = 1, limit = 12) => 
-        api.get(`/products/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`)
+    getStats: () => api.get('/products/stats')
 };
 
 // Users API
 export const usersAPI = {
     getProfile: () => api.get('/users/profile'),
     updateProfile: (userData) => api.put('/users/profile', userData),
-    getAll: () => api.get('/users'),
-    updateStatus: (id, status) => api.put(`/users/${id}/status`, { status }),
-    updateUser: (id, userData) => api.put(`/users/${id}`, userData)
+    getStats: () => api.get('/users/stats'),
+    getAllUsers: () => api.get('/users')
 };
 
 export default api; 

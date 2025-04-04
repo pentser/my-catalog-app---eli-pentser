@@ -8,8 +8,17 @@ const seedUsers = require('./seed/users');
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://elipentser.info']
+        : ['http://localhost:3000'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static files from the React app in production
