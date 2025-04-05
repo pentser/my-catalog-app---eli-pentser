@@ -66,7 +66,7 @@ const Profile = () => {
             console.log('Submitting profile update with data:', formData);
             
             // הסרת שדות שלא צריכים להישלח לעדכון
-            const { _id, user_id, user_name, status, isAdmin, createdAt, updatedAt, ...updateData } = formData;
+            const { _id, user_id, user_name, status, isAdmin, createdAt, updatedAt, __v, ...updateData } = formData;
             
             // וידוא שהתאריך נשלח בפורמט הנכון
             const updatedData = {
