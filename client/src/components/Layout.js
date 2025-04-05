@@ -10,20 +10,60 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
     const [formData, setFormData] = useState({
         product_name: '',
         product_description: '',
-        current_stock_level: 0
+        current_stock_level: 0,
+        product_image: ''
     });
+    const [imagePreview, setImagePreview] = useState(null);
+    const [imageError, setImageError] = useState('');
+
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
 
     React.useEffect(() => {
         if (initialData) {
             setFormData(initialData);
+            setImagePreview(initialData.product_image);
         }
     }, [initialData]);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value, type, files } = e.target;
+        
+        if (type === 'file') {
+            const file = files[0];
+            if (file) {
+                if (file.size > MAX_FILE_SIZE) {
+                    setImageError('גודל התמונה חייב להיות קטן מ-25MB');
+                    e.target.value = ''; // נקה את שדה הקובץ
+                    return;
+                }
+                
+                setImageError(''); // נקה הודעות שגיאה קודמות
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const imageDataUrl = reader.result;
+                    setImagePreview(imageDataUrl);
+                    setFormData(prev => ({
+                        ...prev,
+                        product_image: imageDataUrl
+                    }));
+                };
+                reader.readAsDataURL(file);
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setImagePreview(null);
+        setImageError('');
+        setFormData(prev => ({
+            ...prev,
+            product_image: ''
+        }));
     };
 
     const handleSubmit = (e) => {
@@ -35,12 +75,12 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
 
     return (
         <div className={styles.dialog}>
-            <h2 className={styles.dialogTitle}>{initialData ? 'Edit Product' : 'Add Product'}</h2>
+            <h2 className={styles.dialogTitle}>הוסף מוצר חדש</h2>
             <form onSubmit={handleSubmit}>
                 <div className={styles.dialogContent}>
                     <input
                         className={styles.formField}
-                        placeholder="Product Name"
+                        placeholder="שם המוצר"
                         name="product_name"
                         value={formData.product_name}
                         onChange={handleChange}
@@ -48,7 +88,7 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
                     />
                     <textarea
                         className={styles.formField}
-                        placeholder="Description"
+                        placeholder="תיאור המוצר"
                         name="product_description"
                         value={formData.product_description}
                         onChange={handleChange}
@@ -58,19 +98,46 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
                     <input
                         className={styles.formField}
                         type="number"
-                        placeholder="Stock Level"
+                        placeholder="כמות במלאי"
                         name="current_stock_level"
                         value={formData.current_stock_level}
                         onChange={handleChange}
                         required
                     />
+                    <div className={styles.imageUploadSection}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleChange}
+                            className={styles.imageInput}
+                            id="product-image"
+                        />
+                        <label htmlFor="product-image" className={styles.imageInputLabel}>
+                            {imagePreview ? 'שנה תמונה' : 'העלה תמונה (עד 25MB)'}
+                        </label>
+                        {imageError && <div className={styles.imageError}>{imageError}</div>}
+                    </div>
+                    {imagePreview && (
+                        <>
+                            <div className={styles.imagePreview}>
+                                <img src={imagePreview} alt="תצוגה מקדימה" />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleRemoveImage}
+                                className={styles.removeImageButton}
+                            >
+                                הסר תמונה
+                            </button>
+                        </>
+                    )}
                 </div>
                 <div className={styles.dialogActions}>
-                    <button type="button" className={`${styles.button} ${styles.buttonSecondary}`} onClick={onClose}>
-                        Cancel
+                    <button type="button" className={styles.cancelButton} onClick={onClose}>
+                        ביטול
                     </button>
-                    <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
-                        {initialData ? 'Update' : 'Add'}
+                    <button type="submit" className={styles.submitButton}>
+                        הוסף
                     </button>
                 </div>
             </form>
@@ -84,6 +151,8 @@ const Layout = () => {
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -120,13 +189,30 @@ const Layout = () => {
         navigate('/login');
     };
 
+    const handleCreateProduct = async (formData) => {
+        try {
+            const productData = {
+                ...formData,
+                product_id: Date.now()
+            };
+            await productsAPI.create(productData);
+            setSuccess('המוצר נוצר בהצלחה');
+            setOpenDialog(false);
+            navigate('/');
+        } catch (err) {
+            console.error('Error creating product:', err);
+            setError('שגיאה ביצירת המוצר');
+        }
+    };
+
     const menuItems = [
-        { text: 'Products', icon: '🛍️', path: '/' },
-        { text: 'Profile', icon: '👤', path: '/profile' },
+        { text: 'מוצרים', icon: '🛍️', path: '/' },
+        { text: 'פרופיל', icon: '👤', path: '/profile' },
         ...(user?.isAdmin ? [
-            { text: 'Admin Dashboard', icon: '📊', path: '/admin' },
-            { text: 'Edit Products', icon: '✏️', path: '/products/edit' },
-            { text: 'Delete Products', icon: '🗑️', path: '/products/delete' }
+            { text: 'הוסף מוצר', icon: '➕', action: () => setOpenDialog(true) },
+            { text: 'לוח בקרה', icon: '📊', path: '/admin' },
+            { text: 'עריכת מוצרים', icon: '✏️', path: '/products/edit' },
+            { text: 'מחיקת מוצרים', icon: '🗑️', path: '/products/delete' }
         ] : [])
     ];
 
@@ -137,12 +223,12 @@ const Layout = () => {
                     ☰
                 </button>
                 {user && (
-                    <span className={styles.welcomeMessage}>Welcome, {user.first_name}</span>
+                    <span className={styles.welcomeMessage}>שלום, {user.first_name}</span>
                 )}
                 <div className={styles.toolbar}>
                     {user && (
                         <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={handleLogout}>
-                            Logout
+                            התנתק
                         </button>
                     )}
                 </div>
@@ -154,7 +240,7 @@ const Layout = () => {
                         <span className={styles.searchIcon}>🔍</span>
                         <input
                             type="text"
-                            placeholder="Search products..."
+                            placeholder="חיפוש מוצרים..."
                             value={searchQuery}
                             onChange={handleSearchChange}
                         />
@@ -179,6 +265,13 @@ const Layout = () => {
                 {success && <div className={`${styles.alert} ${styles.alertSuccess}`}>{success}</div>}
                 <Outlet />
             </main>
+
+            <ProductForm
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                onSubmit={handleCreateProduct}
+                initialData={null}
+            />
         </div>
     );
 };

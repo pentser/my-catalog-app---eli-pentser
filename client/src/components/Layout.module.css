@@ -136,49 +136,51 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: white;
+  background: white;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
   width: 90%;
+  max-width: 500px;
   z-index: 1200;
 }
 
 .dialogTitle {
-  margin-bottom: 1.5rem;
-  color: #333;
   font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+  text-align: right;
 }
 
 .dialogContent {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.formField {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.formField:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
 .dialogActions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
+  gap: 1rem;
 }
 
-.formField {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.formField:focus {
-  outline: none;
-  border-color: #1976d2;
-}
-
-.button {
-  padding: 0.5rem 1rem;
+.cancelButton,
+.submitButton {
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
@@ -186,40 +188,94 @@
   transition: background-color 0.2s;
 }
 
-.buttonPrimary {
-  background-color: #1976d2;
-  color: white;
-}
-
-.buttonPrimary:hover {
-  background-color: #1565c0;
-}
-
-.buttonSecondary {
+.cancelButton {
   background-color: #f5f5f5;
   color: #333;
 }
 
-.buttonSecondary:hover {
+.submitButton {
+  background-color: #007bff;
+  color: white;
+}
+
+.cancelButton:hover {
   background-color: #e0e0e0;
 }
 
-/* Alert styles */
-.alert {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 4px;
-  font-size: 1rem;
+.submitButton:hover {
+  background-color: #0056b3;
 }
 
-.alertSuccess {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #a5d6a7;
+.imageUploadSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.imageError {
+  color: #dc3545;
+  font-size: 0.875rem;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.imageInput {
+  display: none;
+}
+
+.imageInputLabel {
+  padding: 0.75rem 1.5rem;
+  background-color: #f5f5f5;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.imageInputLabel:hover {
+  background-color: #e0e0e0;
+}
+
+.imagePreview {
+  width: 100%;
+  max-height: 200px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeImageButton {
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.removeImageButton:hover {
+  background-color: #c82333;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
 }
 
 .alertError {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ef9a9a;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.alertSuccess {
+  background-color: #d4edda;
+  color: #155724;
 } 
