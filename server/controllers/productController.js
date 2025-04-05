@@ -113,29 +113,25 @@ const deleteProduct = async (req, res) => {
 // Search products
 const searchProducts = async (req, res) => {
     try {
-        const { query } = req.query;
+        const query = req.query.query || '';
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || req.user.preferences.page_size;
+        const limit = parseInt(req.query.limit) || req.user.preferences.page_size || 10;
         const skip = (page - 1) * limit;
 
-        const products = await Product.find({
+        const searchQuery = {
             status: true,
             $or: [
                 { product_name: { $regex: query, $options: 'i' } },
                 { product_description: { $regex: query, $options: 'i' } }
             ]
-        })
-        .skip(skip)
-        .limit(limit)
-        .sort({ creation_date: -1 });
+        };
 
-        const total = await Product.countDocuments({
-            status: true,
-            $or: [
-                { product_name: { $regex: query, $options: 'i' } },
-                { product_description: { $regex: query, $options: 'i' } }
-            ]
-        });
+        const products = await Product.find(searchQuery)
+            .skip(skip)
+            .limit(limit)
+            .sort({ creation_date: -1 });
+
+        const total = await Product.countDocuments(searchQuery);
 
         res.json({
             products,
@@ -144,6 +140,7 @@ const searchProducts = async (req, res) => {
             totalProducts: total
         });
     } catch (error) {
+        console.error('Search error:', error);
         res.status(500).json({ error: error.message });
     }
 };

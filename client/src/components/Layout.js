@@ -82,14 +82,11 @@ const Layout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-    const [openDialog, setOpenDialog] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -123,53 +120,11 @@ const Layout = () => {
         navigate('/login');
     };
 
-    const handleCreateProduct = async (formData) => {
-        try {
-            const productData = {
-                ...formData,
-                product_id: Date.now()
-            };
-            await productsAPI.create(productData);
-            setSuccess('Product created successfully');
-            setOpenDialog(false);
-            navigate('/');
-        } catch (err) {
-            console.error('Error creating product:', err);
-            setError('Failed to create product');
-        }
-    };
-
-    const handleUpdateProduct = async (formData) => {
-        try {
-            await productsAPI.update(selectedProduct.product_id, formData);
-            setSuccess('Product updated successfully');
-            setOpenDialog(false);
-            navigate('/');
-        } catch (err) {
-            console.error('Error updating product:', err);
-            setError('Failed to update product');
-        }
-    };
-
-    const handleDeleteProduct = async (productId) => {
-        if (window.confirm('Are you sure you want to delete this product?')) {
-            try {
-                await productsAPI.delete(productId);
-                setSuccess('Product deleted successfully');
-                navigate('/');
-            } catch (err) {
-                console.error('Error deleting product:', err);
-                setError('Failed to delete product');
-            }
-        }
-    };
-
     const menuItems = [
         { text: 'Products', icon: '🛍️', path: '/' },
         { text: 'Profile', icon: '👤', path: '/profile' },
         ...(user?.isAdmin ? [
             { text: 'Admin Dashboard', icon: '📊', path: '/admin' },
-            { text: 'Add Product', icon: '➕', action: () => { setSelectedProduct(null); setOpenDialog(true); } },
             { text: 'Edit Products', icon: '✏️', path: '/products/edit' },
             { text: 'Delete Products', icon: '🗑️', path: '/products/delete' }
         ] : [])
@@ -224,13 +179,6 @@ const Layout = () => {
                 {success && <div className={`${styles.alert} ${styles.alertSuccess}`}>{success}</div>}
                 <Outlet />
             </main>
-
-            <ProductForm
-                open={openDialog}
-                onClose={() => setOpenDialog(false)}
-                onSubmit={selectedProduct ? handleUpdateProduct : handleCreateProduct}
-                initialData={selectedProduct}
-            />
         </div>
     );
 };

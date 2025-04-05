@@ -62,9 +62,9 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .productCard:hover {
@@ -261,4 +261,75 @@
     width: 95%;
     padding: 1rem;
   }
+}
+
+.imageUploadContainer {
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.imageInput {
+    display: none;
+}
+
+.imageInputLabel {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.imageInputLabel:hover {
+    background-color: #0056b3;
+}
+
+.imagePreview {
+    width: 200px;
+    height: 200px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.imagePreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.removeImageButton {
+    padding: 0.5rem 1rem;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.removeImageButton:hover {
+    background-color: #c82333;
+}
+
+.productImage {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.productImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.productImage img:hover {
+    transform: scale(1.05);
 } 

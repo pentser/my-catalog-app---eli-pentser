@@ -10,6 +10,11 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
 
     return (
         <div className={styles.productCard}>
+            {product.product_image && (
+                <div className={styles.productImage}>
+                    <img src={product.product_image} alt={product.product_name} />
+                </div>
+            )}
             <div className={styles.productContent}>
                 <h3 className={styles.productTitle}>{product.product_name}</h3>
                 <p className={styles.productId}>ID: {product.product_id}</p>
@@ -34,20 +39,49 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
     const [formData, setFormData] = useState({
         product_name: '',
         product_description: '',
-        current_stock_level: 0
+        current_stock_level: 0,
+        product_image: ''
     });
+    const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
         if (initialData) {
             setFormData(initialData);
+            setImagePreview(initialData.product_image);
         }
     }, [initialData]);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value, type, files } = e.target;
+        
+        if (type === 'file') {
+            const file = files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const imageDataUrl = reader.result;
+                    setImagePreview(imageDataUrl);
+                    setFormData(prev => ({
+                        ...prev,
+                        product_image: imageDataUrl
+                    }));
+                };
+                reader.readAsDataURL(file);
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setImagePreview(null);
+        setFormData(prev => ({
+            ...prev,
+            product_image: ''
+        }));
     };
 
     const handleSubmit = (e) => {
@@ -59,12 +93,12 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
 
     return (
         <div className={styles.dialog}>
-            <h2 className={styles.dialogTitle}>{initialData ? 'Edit Product' : 'Add Product'}</h2>
+            <h2 className={styles.dialogTitle}>{initialData ? 'ערוך מוצר' : 'הוסף מוצר'}</h2>
             <form onSubmit={handleSubmit}>
                 <div className={styles.dialogContent}>
                     <input
                         className={styles.formField}
-                        placeholder="Product Name"
+                        placeholder="שם המוצר"
                         name="product_name"
                         value={formData.product_name}
                         onChange={handleChange}
@@ -72,7 +106,7 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
                     />
                     <textarea
                         className={styles.formField}
-                        placeholder="Description"
+                        placeholder="תיאור המוצר"
                         name="product_description"
                         value={formData.product_description}
                         onChange={handleChange}
@@ -82,19 +116,45 @@ const ProductForm = ({ open, onClose, onSubmit, initialData }) => {
                     <input
                         className={styles.formField}
                         type="number"
-                        placeholder="Stock Level"
+                        placeholder="כמות במלאי"
                         name="current_stock_level"
                         value={formData.current_stock_level}
                         onChange={handleChange}
                         required
                     />
+                    <div className={styles.imageUploadContainer}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleChange}
+                            className={styles.imageInput}
+                            id="product-image"
+                        />
+                        <label htmlFor="product-image" className={styles.imageInputLabel}>
+                            {imagePreview ? 'שנה תמונה' : 'העלה תמונה'}
+                        </label>
+                        {imagePreview && (
+                            <>
+                                <div className={styles.imagePreview}>
+                                    <img src={imagePreview} alt="תצוגה מקדימה" />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveImage}
+                                    className={styles.removeImageButton}
+                                >
+                                    הסר תמונה
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
                 <div className={styles.dialogActions}>
                     <button type="button" className={styles.cancelButton} onClick={onClose}>
-                        Cancel
+                        ביטול
                     </button>
                     <button type="submit" className={styles.submitButton}>
-                        {initialData ? 'Update' : 'Add'}
+                        {initialData ? 'עדכן' : 'הוסף'}
                     </button>
                 </div>
             </form>

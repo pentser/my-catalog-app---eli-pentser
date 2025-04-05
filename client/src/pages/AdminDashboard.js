@@ -18,8 +18,8 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
         try {
             const [productsResponse, usersResponse] = await Promise.all([
-                productsAPI.getAll(),
-                usersAPI.getAll()
+                productsAPI.getAll(1),
+                usersAPI.getAllUsers()
             ]);
 
             const products = productsResponse.data.products || [];
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className={styles.actionsGrid}>
-                <Link to="/products/edit" className={styles.actionCard}>
+                <Link to="/" className={styles.actionCard}>
                     <h2 className={styles.actionTitle}>ניהול מוצרים</h2>
                     <p className={styles.actionDescription}>
                         הוסף, ערוך או מחק מוצרים מהמערכת
