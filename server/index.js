@@ -47,10 +47,15 @@ const mongooseOptions = {
     dbName: 'productsDB'
 };
 
+console.log('Attempting to connect to MongoDB...');
+console.log('MongoDB URI is set:', !!process.env.MONGODB_URI);
+console.log('Environment:', process.env.NODE_ENV);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsDB', mongooseOptions)
     .then(async () => {
-        console.log('Connected to MongoDB');
+        console.log('Connected to MongoDB successfully');
+        console.log('Database name:', mongoose.connection.db.databaseName);
         
         // Seed data only in development
         if (process.env.NODE_ENV !== 'production') {
@@ -61,6 +66,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsD
     })
     .catch((error) => {
         console.error('MongoDB connection error:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+        });
         // Don't exit the process, just log the error
         console.error('Failed to connect to MongoDB, will retry...');
     });
@@ -68,6 +79,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsD
 // Handle MongoDB connection events
 mongoose.connection.on('error', err => {
     console.error('MongoDB connection error:', err);
+    console.error('Error details:', {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        stack: err.stack
+    });
 });
 
 mongoose.connection.on('disconnected', () => {

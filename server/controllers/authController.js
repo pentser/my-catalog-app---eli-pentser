@@ -12,9 +12,12 @@ const generateToken = (user) => {
 
 const register = async (req, res) => {
     try {
+        console.log('Registration attempt with data:', req.body);
+
         // Validate request body
         const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
         if (error) {
+            console.log('Validation error:', error.details);
             const errors = error.details.map(detail => detail.message);
             return res.status(400).json({
                 error: errors.join(', ')
@@ -23,17 +26,20 @@ const register = async (req, res) => {
 
         const { user_name, first_name, last_name, email, birth_date, password } = value;
 
+        console.log('Checking for existing user...');
         // Check if user already exists
         const existingUser = await User.findOne({ 
             $or: [{ email }, { user_name }] 
         });
 
         if (existingUser) {
+            console.log('User already exists:', { email, user_name });
             return res.status(400).json({ 
                 error: 'משתמש עם אימייל או שם משתמש זה כבר קיים במערכת' 
             });
         }
 
+        console.log('Creating new user...');
         // Create new user
         const user = new User({
             user_id: Date.now(),
@@ -46,7 +52,9 @@ const register = async (req, res) => {
             isAdmin: false // Always set to false for new registrations
         });
 
+        console.log('Saving user to database...');
         await user.save();
+        console.log('User saved successfully:', user._id);
 
         // Generate token
         const token = generateToken(user);
@@ -62,8 +70,11 @@ const register = async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(400).json({ 
-            error: error.message || 'ההרשמה נכשלה' 
+        console.error('Error stack:', error.stack);
+        console.error('MongoDB connection string:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+        res.status(500).json({ 
+            error: error.message || 'ההרשמה נכשלה',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
