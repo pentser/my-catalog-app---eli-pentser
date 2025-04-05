@@ -52,11 +52,13 @@ const updateUserProfile = async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
-                first_name,
-                last_name,
-                email,
-                birth_date: new Date(birth_date),
-                preferences
+                $set: {
+                    first_name,
+                    last_name,
+                    email,
+                    birth_date: new Date(birth_date),
+                    preferences
+                }
             },
             { new: true }
         ).select('-password');
