@@ -63,17 +63,22 @@ const Profile = () => {
         setSuccess('');
         
         try {
-            console.log('Submitting profile update with data:', formData);
-            
+            // בדיקת תקינות התאריך
+            const birthDate = new Date(formData.birth_date);
+            if (isNaN(birthDate.getTime())) {
+                setError('תאריך הלידה אינו תקין');
+                return;
+            }
+
             // הסרת שדות שלא צריכים להישלח לעדכון
             const { _id, user_id, user_name, status, isAdmin, createdAt, updatedAt, __v, ...updateData } = formData;
             
-            // וידוא שהתאריך נשלח בפורמט הנכון
+            // וידוא שהנתונים תקינים לפני השליחה
             const updatedData = {
                 ...updateData,
-                birth_date: new Date(updateData.birth_date).toISOString(),
+                birth_date: birthDate.toISOString(),
                 preferences: {
-                    page_size: parseInt(updateData.preferences.page_size) || 12
+                    page_size: Math.min(Math.max(parseInt(updateData.preferences?.page_size) || 12, 1), 100)
                 }
             };
             

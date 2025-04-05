@@ -33,6 +33,18 @@ const updateUserProfile = async (req, res) => {
         const { first_name, last_name, email, birth_date, preferences } = req.body;
         const userId = req.user._id;
 
+        // בדיקת תקינות התאריך
+        let parsedDate;
+        try {
+            parsedDate = new Date(birth_date);
+            if (isNaN(parsedDate.getTime())) {
+                throw new Error('תאריך לא תקין');
+            }
+        } catch (dateError) {
+            console.error('Invalid date:', birth_date, dateError);
+            return res.status(400).json({ message: 'תאריך הלידה אינו תקין' });
+        }
+
         console.log('Checking for existing email...');
         const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
         if (existingEmail) {
@@ -40,26 +52,27 @@ const updateUserProfile = async (req, res) => {
             return res.status(400).json({ message: 'כתובת האימייל כבר קיימת במערכת' });
         }
 
-        console.log('Updating user profile...');
-        console.log('Update data:', {
+        // בדיקת תקינות העדפות
+        const pageSize = preferences?.page_size || 12;
+        if (typeof pageSize !== 'number' || pageSize < 1 || pageSize > 100) {
+            return res.status(400).json({ message: 'גודל העמוד חייב להיות מספר בין 1 ל-100' });
+        }
+
+        const updateData = {
             first_name,
             last_name,
             email,
-            birth_date: new Date(birth_date),
-            preferences
-        });
+            birth_date: parsedDate,
+            preferences: {
+                page_size: pageSize
+            }
+        };
+
+        console.log('Updating user profile with data:', updateData);
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            {
-                $set: {
-                    first_name,
-                    last_name,
-                    email,
-                    birth_date: new Date(birth_date),
-                    preferences
-                }
-            },
+            { $set: updateData },
             { new: true, runValidators: true }
         ).select('-password');
 
@@ -78,8 +91,17 @@ const updateUserProfile = async (req, res) => {
             message: err.message,
             code: err.code
         });
+        
+        // שליחת הודעת שגיאה מפורטת יותר
+        let errorMessage = 'שגיאה בעדכון הפרופיל';
+        if (err.name === 'ValidationError') {
+            errorMessage = 'שגיאה באימות הנתונים';
+        } else if (err.name === 'CastError') {
+            errorMessage = 'שגיאה בהמרת נתונים';
+        }
+        
         res.status(500).json({ 
-            message: 'שגיאה בעדכון הפרופיל',
+            message: errorMessage,
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
