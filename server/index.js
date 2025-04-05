@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const seedProducts = require('./seed/products');
 const seedUsers = require('./seed/users');
+const fs = require('fs');
 
 const app = express();
 
@@ -34,7 +35,41 @@ app.use((req, res, next) => {
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'public')));
+    const publicPath = path.join(__dirname, 'public');
+    
+    // Check if public directory exists
+    if (!fs.existsSync(publicPath)) {
+        console.warn('Public directory does not exist at:', publicPath);
+        console.warn('Creating public directory...');
+        fs.mkdirSync(publicPath, { recursive: true });
+        
+        // Create a basic index.html if it doesn't exist
+        const indexPath = path.join(publicPath, 'index.html');
+        if (!fs.existsSync(indexPath)) {
+            const basicHtml = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="utf-8">
+                    <title>My Catalog App</title>
+                </head>
+                <body>
+                    <div id="root"></div>
+                    <script>
+                        // Redirect to the correct URL if needed
+                        if (window.location.pathname !== '/') {
+                            window.location.href = '/';
+                        }
+                    </script>
+                </body>
+                </html>
+            `;
+            fs.writeFileSync(indexPath, basicHtml);
+            console.log('Created basic index.html');
+        }
+    }
+    
+    app.use(express.static(publicPath));
 }
 
 // MongoDB Connection Options
@@ -114,8 +149,21 @@ app.use('/api/users', require('./routes/users'));
 
 // Serve React app for any other routes in production
 if (process.env.NODE_ENV === 'production') {
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    app.get('*', (req, res, next) => {
+        // Skip API routes
+        if (req.path.startsWith('/api/')) {
+            return next();
+        }
+        
+        const indexPath = path.join(__dirname, 'public', 'index.html');
+        
+        // Check if index.html exists
+        if (!fs.existsSync(indexPath)) {
+            console.warn('index.html not found at:', indexPath);
+            return res.status(404).json({ error: 'Application files not found' });
+        }
+        
+        res.sendFile(indexPath);
     });
 }
 
