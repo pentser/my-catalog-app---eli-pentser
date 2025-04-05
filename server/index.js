@@ -42,33 +42,12 @@ if (process.env.NODE_ENV === 'production') {
         console.warn('Public directory does not exist at:', publicPath);
         console.warn('Creating public directory...');
         fs.mkdirSync(publicPath, { recursive: true });
-        
-        // Create a basic index.html if it doesn't exist
-        const indexPath = path.join(publicPath, 'index.html');
-        if (!fs.existsSync(indexPath)) {
-            const basicHtml = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="utf-8">
-                    <title>My Catalog App</title>
-                </head>
-                <body>
-                    <div id="root"></div>
-                    <script>
-                        // Redirect to the correct URL if needed
-                        if (window.location.pathname !== '/') {
-                            window.location.href = '/';
-                        }
-                    </script>
-                </body>
-                </html>
-            `;
-            fs.writeFileSync(indexPath, basicHtml);
-            console.log('Created basic index.html');
-        }
     }
+
+    console.log('Serving static files from:', publicPath);
+    console.log('Directory contents:', fs.readdirSync(publicPath));
     
+    // Serve static files
     app.use(express.static(publicPath));
 }
 
@@ -160,9 +139,14 @@ if (process.env.NODE_ENV === 'production') {
         // Check if index.html exists
         if (!fs.existsSync(indexPath)) {
             console.warn('index.html not found at:', indexPath);
-            return res.status(404).json({ error: 'Application files not found' });
+            return res.status(404).json({ 
+                error: 'Application files not found',
+                path: indexPath,
+                publicDir: fs.readdirSync(path.join(__dirname, 'public'))
+            });
         }
         
+        console.log('Serving index.html for path:', req.path);
         res.sendFile(indexPath);
     });
 }
