@@ -71,7 +71,10 @@ const Profile = () => {
             // וידוא שהתאריך נשלח בפורמט הנכון
             const updatedData = {
                 ...updateData,
-                birth_date: new Date(updateData.birth_date).toISOString()
+                birth_date: new Date(updateData.birth_date).toISOString(),
+                preferences: {
+                    page_size: parseInt(updateData.preferences.page_size) || 12
+                }
             };
             
             console.log('Sending update request with formatted data:', updatedData);
@@ -83,7 +86,17 @@ const Profile = () => {
         } catch (err) {
             console.error('Error updating profile:', err);
             console.error('Error response:', err.response?.data);
-            setError(err.response?.data?.message || 'שגיאה בעדכון הפרופיל');
+            
+            let errorMessage = 'שגיאה בעדכון הפרופיל';
+            if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
         }
     };
 

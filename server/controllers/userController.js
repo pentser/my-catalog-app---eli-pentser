@@ -60,7 +60,7 @@ const updateUserProfile = async (req, res) => {
                     preferences
                 }
             },
-            { new: true }
+            { new: true, runValidators: true }
         ).select('-password');
 
         if (!updatedUser) {
@@ -73,10 +73,14 @@ const updateUserProfile = async (req, res) => {
     } catch (err) {
         console.error('שגיאה בעדכון פרופיל:', err);
         console.error('Error stack:', err.stack);
-        console.error('MongoDB connection string:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+        console.error('Error details:', {
+            name: err.name,
+            message: err.message,
+            code: err.code
+        });
         res.status(500).json({ 
             message: 'שגיאה בעדכון הפרופיל',
-            details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
 };
