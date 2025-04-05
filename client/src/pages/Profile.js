@@ -65,10 +65,13 @@ const Profile = () => {
         try {
             console.log('Submitting profile update with data:', formData);
             
+            // הסרת שדות שלא צריכים להישלח לעדכון
+            const { _id, user_id, user_name, ...updateData } = formData;
+            
             // וידוא שהתאריך נשלח בפורמט הנכון
             const updatedData = {
-                ...formData,
-                birth_date: new Date(formData.birth_date).toISOString()
+                ...updateData,
+                birth_date: new Date(updateData.birth_date).toISOString()
             };
             
             console.log('Sending update request with formatted data:', updatedData);
