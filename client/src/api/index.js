@@ -29,13 +29,13 @@ export const authAPI = {
 
 // Products API
 export const productsAPI = {
-    getAll: (page) => api.get(`/products?page=${page}`),
+    getAll: (page = 1) => api.get(`/products?page=${page}`),
     getById: (id) => api.get(`/products/${id}`),
     create: (productData) => api.post('/products', productData),
     update: (id, productData) => api.put(`/products/${id}`, productData),
     delete: (id) => api.delete(`/products/${id}`),
     getStats: () => api.get('/products/stats'),
-    search: (query, page) => api.get(`/products/search?query=${query}&page=${page}`)
+    search: (query = '', page = 1) => api.get(`/products/search?query=${encodeURIComponent(query)}&page=${page}`)
 };
 
 // Users API

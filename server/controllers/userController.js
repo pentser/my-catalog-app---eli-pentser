@@ -21,18 +21,33 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateUserProfile = async (req, res) => {
     try {
+        console.log('Update profile attempt with data:', req.body);
+        console.log('User ID:', req.user._id);
+
         const { error } = updateProfileValidation(req.body);
         if (error) {
+            console.log('Validation error:', error.details);
             return res.status(400).json({ message: error.details[0].message });
         }
 
         const { first_name, last_name, email, birth_date, preferences } = req.body;
         const userId = req.user._id;
 
+        console.log('Checking for existing email...');
         const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
         if (existingEmail) {
+            console.log('Email already exists:', email);
             return res.status(400).json({ message: 'כתובת האימייל כבר קיימת במערכת' });
         }
+
+        console.log('Updating user profile...');
+        console.log('Update data:', {
+            first_name,
+            last_name,
+            email,
+            birth_date: new Date(birth_date),
+            preferences
+        });
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
@@ -47,13 +62,20 @@ const updateUserProfile = async (req, res) => {
         ).select('-password');
 
         if (!updatedUser) {
+            console.log('User not found with ID:', userId);
             return res.status(404).json({ message: 'המשתמש לא נמצא' });
         }
 
+        console.log('User updated successfully:', updatedUser._id);
         res.json(updatedUser);
     } catch (err) {
         console.error('שגיאה בעדכון פרופיל:', err);
-        res.status(500).json({ message: 'שגיאה בעדכון הפרופיל' });
+        console.error('Error stack:', err.stack);
+        console.error('MongoDB connection string:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+        res.status(500).json({ 
+            message: 'שגיאה בעדכון הפרופיל',
+            details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 };
 

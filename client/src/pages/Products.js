@@ -180,15 +180,19 @@ const Products = () => {
         try {
             let response;
             if (searchQuery.trim()) {
+                console.log('Searching products with query:', searchQuery, 'page:', page);
                 response = await productsAPI.search(searchQuery.trim(), page);
             } else {
+                console.log('Fetching all products, page:', page);
                 response = await productsAPI.getAll(page);
             }
+            console.log('Products response:', response.data);
             setProducts(response.data.products);
             setTotalPages(response.data.totalPages);
         } catch (err) {
             console.error('Error fetching products:', err);
-            setError('Failed to fetch products');
+            const errorMessage = err.response?.data?.error || err.message || 'שגיאה בטעינת המוצרים';
+            setError(errorMessage);
         }
     };
 

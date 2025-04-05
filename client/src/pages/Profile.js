@@ -59,18 +59,28 @@ const Profile = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
+        
         try {
+            console.log('Submitting profile update with data:', formData);
+            
             // וידוא שהתאריך נשלח בפורמט הנכון
             const updatedData = {
                 ...formData,
                 birth_date: new Date(formData.birth_date).toISOString()
             };
             
-            await usersAPI.updateProfile(updatedData);
+            console.log('Sending update request with formatted data:', updatedData);
+            const response = await usersAPI.updateProfile(updatedData);
+            console.log('Update response:', response.data);
+            
             setSuccess('הפרופיל עודכן בהצלחה');
             fetchProfile();
         } catch (err) {
-            setError('שגיאה בעדכון הפרופיל');
+            console.error('Error updating profile:', err);
+            console.error('Error response:', err.response?.data);
+            setError(err.response?.data?.message || 'שגיאה בעדכון הפרופיל');
         }
     };
 

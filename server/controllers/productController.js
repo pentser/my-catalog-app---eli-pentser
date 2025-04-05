@@ -3,9 +3,12 @@ const Product = require('../models/Product');
 // Get all products with pagination
 const getProducts = async (req, res) => {
     try {
+        console.log('Getting products with query:', req.query);
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || req.user.preferences.page_size;
+        const limit = parseInt(req.query.limit) || (req.user?.preferences?.page_size || 10);
         const skip = (page - 1) * limit;
+
+        console.log('Pagination:', { page, limit, skip });
 
         const products = await Product.find({ status: true })
             .skip(skip)
@@ -14,6 +17,12 @@ const getProducts = async (req, res) => {
 
         const total = await Product.countDocuments({ status: true });
 
+        console.log('Found products:', {
+            count: products.length,
+            total,
+            totalPages: Math.ceil(total / limit)
+        });
+
         res.json({
             products,
             currentPage: page,
@@ -21,7 +30,8 @@ const getProducts = async (req, res) => {
             totalProducts: total
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error getting products:', error);
+        res.status(500).json({ error: error.message || 'שגיאה בטעינת המוצרים' });
     }
 };
 
@@ -113,10 +123,13 @@ const deleteProduct = async (req, res) => {
 // Search products
 const searchProducts = async (req, res) => {
     try {
+        console.log('Searching products with query:', req.query);
         const query = req.query.query || '';
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || req.user.preferences.page_size || 10;
+        const limit = parseInt(req.query.limit) || (req.user?.preferences?.page_size || 10);
         const skip = (page - 1) * limit;
+
+        console.log('Search parameters:', { query, page, limit, skip });
 
         const searchQuery = {
             status: true,
@@ -126,12 +139,20 @@ const searchProducts = async (req, res) => {
             ]
         };
 
+        console.log('MongoDB search query:', searchQuery);
+
         const products = await Product.find(searchQuery)
             .skip(skip)
             .limit(limit)
             .sort({ creation_date: -1 });
 
         const total = await Product.countDocuments(searchQuery);
+
+        console.log('Search results:', {
+            count: products.length,
+            total,
+            totalPages: Math.ceil(total / limit)
+        });
 
         res.json({
             products,
@@ -141,7 +162,7 @@ const searchProducts = async (req, res) => {
         });
     } catch (error) {
         console.error('Search error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message || 'שגיאה בחיפוש מוצרים' });
     }
 };
 
