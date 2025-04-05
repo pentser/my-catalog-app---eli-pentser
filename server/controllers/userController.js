@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
+const { registerValidation, updateProfileValidation } = require('../validation/userValidation');
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -19,36 +21,39 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateUserProfile = async (req, res) => {
     try {
-        const updates = req.body;
-        const allowedUpdates = ['first_name', 'last_name', 'email', 'birth_date', 'preferences'];
-        
-        // Filter out any updates that aren't allowed
-        Object.keys(updates).forEach(update => {
-            if (!allowedUpdates.includes(update)) {
-                delete updates[update];
-            }
-        });
-
-        const user = await User.findOne({ user_id: req.user.user_id });
-        
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+        const { error } = updateProfileValidation(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
         }
 
-        // Update user fields
-        Object.keys(updates).forEach(update => {
-            user[update] = updates[update];
-        });
+        const { first_name, last_name, email, birth_date, preferences } = req.body;
+        const userId = req.user._id;
 
-        await user.save();
+        const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
+        if (existingEmail) {
+            return res.status(400).json({ message: 'כתובת האימייל כבר קיימת במערכת' });
+        }
 
-        // Return updated user without password
-        const updatedUser = user.toObject();
-        delete updatedUser.password;
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                first_name,
+                last_name,
+                email,
+                birth_date: new Date(birth_date),
+                preferences
+            },
+            { new: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'המשתמש לא נמצא' });
+        }
 
         res.json(updatedUser);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+    } catch (err) {
+        console.error('שגיאה בעדכון פרופיל:', err);
+        res.status(500).json({ message: 'שגיאה בעדכון הפרופיל' });
     }
 };
 
@@ -120,6 +125,48 @@ const updateUser = async (req, res) => {
         res.json(updatedUser);
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+};
+
+exports.register = async (req, res) => {
+    try {
+        const { error } = registerValidation(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
+        }
+
+        const { user_name, first_name, last_name, email, password, birth_date } = req.body;
+
+        const existingUser = await User.findOne({ user_name });
+        if (existingUser) {
+            return res.status(400).json({ message: 'שם המשתמש כבר קיים במערכת' });
+        }
+
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ message: 'כתובת האימייל כבר קיימת במערכת' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = new User({
+            user_name,
+            first_name,
+            last_name,
+            email,
+            password: hashedPassword,
+            birth_date: new Date(birth_date),
+            preferences: {
+                page_size: 12
+            }
+        });
+
+        await user.save();
+        res.status(201).json({ message: 'המשתמש נרשם בהצלחה' });
+    } catch (err) {
+        console.error('שגיאה ברישום משתמש:', err);
+        res.status(500).json({ message: 'שגיאה ברישום המשתמש' });
     }
 };
 

@@ -23,8 +23,16 @@ const Profile = () => {
     const fetchProfile = async () => {
         try {
             const response = await usersAPI.getProfile();
-            setProfile(response.data);
-            setFormData(response.data);
+            const userData = response.data;
+            
+            // המרת תאריך לפורמט המתאים לשדה input מסוג date
+            const formattedDate = userData.birth_date ? new Date(userData.birth_date).toISOString().split('T')[0] : '';
+            
+            setProfile(userData);
+            setFormData({
+                ...userData,
+                birth_date: formattedDate
+            });
         } catch (err) {
             setError('Failed to fetch profile');
         }
@@ -52,18 +60,24 @@ const Profile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await usersAPI.updateProfile(formData);
-            setSuccess('Profile updated successfully');
+            // וידוא שהתאריך נשלח בפורמט הנכון
+            const updatedData = {
+                ...formData,
+                birth_date: new Date(formData.birth_date).toISOString()
+            };
+            
+            await usersAPI.updateProfile(updatedData);
+            setSuccess('הפרופיל עודכן בהצלחה');
             fetchProfile();
         } catch (err) {
-            setError('Failed to update profile');
+            setError('שגיאה בעדכון הפרופיל');
         }
     };
 
     if (!profile) {
         return (
             <div className={styles.container}>
-                <div className={styles.error}>Failed to load profile</div>
+                <div className={styles.error}>טעינת הפרופיל נכשלה</div>
             </div>
         );
     }
@@ -71,7 +85,7 @@ const Profile = () => {
     return (
         <div className={styles.container}>
             <div className={styles.formContainer}>
-                <h1 className={styles.title}>Profile</h1>
+                <h1 className={styles.title}>פרופיל</h1>
 
                 {error && (
                     <div className={styles.error}>
@@ -89,14 +103,14 @@ const Profile = () => {
                     <input
                         type="text"
                         className={styles.formField}
-                        placeholder="Username"
+                        placeholder="שם משתמש"
                         value={profile.user_name}
                         disabled
                     />
                     <input
                         type="text"
                         className={styles.formField}
-                        placeholder="First Name"
+                        placeholder="שם פרטי"
                         name="first_name"
                         value={formData.first_name}
                         onChange={handleChange}
@@ -105,7 +119,7 @@ const Profile = () => {
                     <input
                         type="text"
                         className={styles.formField}
-                        placeholder="Last Name"
+                        placeholder="שם משפחה"
                         name="last_name"
                         value={formData.last_name}
                         onChange={handleChange}
@@ -114,7 +128,7 @@ const Profile = () => {
                     <input
                         type="email"
                         className={styles.formField}
-                        placeholder="Email"
+                        placeholder="אימייל"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
@@ -131,7 +145,7 @@ const Profile = () => {
                     <input
                         type="number"
                         className={styles.formField}
-                        placeholder="Products per Page"
+                        placeholder="מוצרים בעמוד"
                         name="preferences.page_size"
                         value={formData.preferences.page_size}
                         onChange={handleChange}
@@ -145,12 +159,12 @@ const Profile = () => {
                                 checked={profile.status}
                                 disabled
                             />
-                            Account Status
+                            סטטוס חשבון
                         </label>
                     </div>
                     <div className={`${styles.formField} ${styles.fullWidth}`} style={{ textAlign: 'right' }}>
                         <button type="submit" className={styles.submitButton}>
-                            Save Changes
+                            שמור שינויים
                         </button>
                     </div>
                 </form>
