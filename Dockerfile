@@ -1,37 +1,32 @@
 # Stage 1: Build React client
 FROM node:18.19.1 as client-builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-COPY . .
 WORKDIR /app/client
+COPY client/package*.json ./
 RUN npm install --legacy-peer-deps
+COPY client/ ./
 ENV CI=false
 RUN npm run build
-RUN ls -la build/
+RUN echo "Client build contents:" && ls -la build/
 
 # Stage 2: Build and run server
 FROM node:18.19.1-slim
 WORKDIR /app/server
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl and debugging tools
+RUN apt-get update && apt-get install -y curl tree && rm -rf /var/lib/apt/lists/*
 
 # Copy server files
 COPY server/package*.json ./
 RUN npm install --production --legacy-peer-deps
 COPY server/ ./
 
-# Create public directory and ensure it exists
-RUN mkdir -p public && ls -la
+# Set up client files
+RUN mkdir -p public
+COPY --from=client-builder /app/client/build/ ./public/
+RUN echo "Public directory structure:" && tree public/
 
-# Copy client build files
-COPY --from=client-builder /app/client/build ./public/
-RUN echo "Contents of public directory:" && ls -la public/
-
-# Copy environment variables if they exist
+# Set up environment
 COPY .env* ./
-
 ENV NODE_ENV=production
 ENV PORT=5000
 EXPOSE 5000
