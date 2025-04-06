@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // קביעת כתובת ה-API מתוך משתני הסביבה
-const baseURL = process.env.REACT_APP_API_URL;
+const baseURL = process.env.REACT_APP_API_URL || 'https://catalog-app-b6cx9.ondigitalocean.app/api';
 
 console.log('API Base URL:', baseURL);
 console.log('Environment:', process.env.REACT_APP_ENV);
@@ -28,6 +28,9 @@ api.interceptors.request.use((config) => {
         headers: config.headers
     });
     return config;
+}, (error) => {
+    console.error('Request Error:', error);
+    return Promise.reject(error);
 });
 
 // הוספת interceptor לטיפול בשגיאות
@@ -43,9 +46,28 @@ api.interceptors.response.use(
         console.error('API Error:', {
             message: error.message,
             config: error.config,
-            response: error.response
+            response: error.response?.data,
+            status: error.response?.status
         });
-        return Promise.reject(error);
+
+        // טיפול בשגיאות ספציפיות
+        if (!error.response) {
+            throw new Error('שגיאת חיבור לשרת. אנא בדוק את החיבור שלך לאינטרנט.');
+        }
+
+        switch (error.response.status) {
+            case 401:
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                throw new Error('אנא התחבר מחדש');
+            case 403:
+                throw new Error('אין לך הרשאות לבצע פעולה זו');
+            case 404:
+                throw new Error('המשאב המבוקש לא נמצא');
+            default:
+                throw new Error(error.response.data?.error || 'שגיאה לא צפויה');
+        }
     }
 );
 
@@ -53,6 +75,9 @@ api.interceptors.response.use(
 export const productsAPI = {
     getAll: (page) => api.get(`/products?page=${page}`),
     search: (query, page) => api.get(`/products/search?query=${query}&page=${page}`),
+    create: (productData) => api.post('/products', productData),
+    update: (id, productData) => api.put(`/products/${id}`, productData),
+    delete: (id) => api.delete(`/products/${id}`),
     getStats: () => api.get('/products/stats')
 };
 

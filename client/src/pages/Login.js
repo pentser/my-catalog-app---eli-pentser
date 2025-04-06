@@ -27,11 +27,26 @@ const Login = () => {
         setError('');
         
         try {
+            if (!formData.user_name.trim() || !formData.password.trim()) {
+                throw new Error('אנא מלא את כל השדות');
+            }
+
+            console.log('Attempting login with:', { username: formData.user_name });
             await login(formData);
             navigate('/', { replace: true });
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'Login failed. Please check your credentials.');
+            let errorMessage = 'שגיאה בהתחברות';
+            
+            if (err.message.includes('חיבור לשרת')) {
+                errorMessage = 'לא ניתן להתחבר לשרת. אנא בדוק את החיבור לאינטרנט שלך.';
+            } else if (err.message.includes('401')) {
+                errorMessage = 'שם משתמש או סיסמה שגויים';
+            } else if (err.message.includes('404')) {
+                errorMessage = 'שירות ההתחברות אינו זמין כרגע';
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -40,13 +55,13 @@ const Login = () => {
     return (
         <div className={styles.container}>
             <div className={styles.formContainer}>
-                <h1 className={styles.title}>Login</h1>
+                <h1 className={styles.title}>התחברות</h1>
                 {error && <div className={styles.error}>{error}</div>}
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <input
                         type="text"
                         className={styles.formField}
-                        placeholder="Username"
+                        placeholder="שם משתמש"
                         name="user_name"
                         value={formData.user_name}
                         onChange={handleChange}
@@ -57,7 +72,7 @@ const Login = () => {
                     <input
                         type="password"
                         className={styles.formField}
-                        placeholder="Password"
+                        placeholder="סיסמה"
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
@@ -69,12 +84,12 @@ const Login = () => {
                         className={styles.submitButton}
                         disabled={loading}
                     >
-                        {loading ? <span className={styles.loading} /> : 'Login'}
+                        {loading ? <span className={styles.loading} /> : 'התחבר'}
                     </button>
                 </form>
                 <div className={styles.registerLink}>
-                    Don't have an account?{' '}
-                    <Link to="/register">Register here</Link>
+                    אין לך חשבון?{' '}
+                    <Link to="/register">הירשם כאן</Link>
                 </div>
             </div>
         </div>
