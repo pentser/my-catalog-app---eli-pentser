@@ -38,12 +38,14 @@ const Login = () => {
             console.error('Login error:', err);
             let errorMessage = 'שגיאה בהתחברות';
             
-            if (err.message.includes('חיבור לשרת')) {
+            if (!err.response) {
                 errorMessage = 'לא ניתן להתחבר לשרת. אנא בדוק את החיבור לאינטרנט שלך.';
-            } else if (err.message.includes('401')) {
+            } else if (err.response?.status === 401) {
                 errorMessage = 'שם משתמש או סיסמה שגויים';
-            } else if (err.message.includes('404')) {
+            } else if (err.response?.status === 404) {
                 errorMessage = 'שירות ההתחברות אינו זמין כרגע';
+            } else if (err.message) {
+                errorMessage = err.message;
             }
             
             setError(errorMessage);
