@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// קביעת כתובת ה-API בהתאם לסביבה
-const baseURL = process.env.NODE_ENV === 'production'
-    ? 'https://catalog-app-b6cx9.ondigitalocean.app/api'
-    : 'http://localhost:5000/api';
+// קביעת כתובת ה-API מתוך משתני הסביבה
+const baseURL = process.env.REACT_APP_API_URL;
+
+console.log('API Base URL:', baseURL);
+console.log('Environment:', process.env.REACT_APP_ENV);
 
 // יצירת מופע axios עם הגדרות בסיסיות
 const api = axios.create({
@@ -14,14 +15,39 @@ const api = axios.create({
     }
 });
 
-// הוספת interceptor לטיפול בטוקן
+// הוספת interceptor לטיפול בטוקן ולוגים
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('Request Config:', {
+        url: config.url,
+        baseURL: config.baseURL,
+        method: config.method,
+        headers: config.headers
+    });
     return config;
 });
+
+// הוספת interceptor לטיפול בשגיאות
+api.interceptors.response.use(
+    (response) => {
+        console.log('Response:', {
+            status: response.status,
+            data: response.data
+        });
+        return response;
+    },
+    (error) => {
+        console.error('API Error:', {
+            message: error.message,
+            config: error.config,
+            response: error.response
+        });
+        return Promise.reject(error);
+    }
+);
 
 // Products API
 export const productsAPI = {

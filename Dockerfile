@@ -4,9 +4,16 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install --legacy-peer-deps
 COPY client/ ./
+
+# Set environment variables for client build
+ENV REACT_APP_API_URL=https://catalog-app-b6cx9.ondigitalocean.app/api
+ENV REACT_APP_ENV=production
 ENV CI=false
+
+# Build client
+RUN echo "Building client with API URL: $REACT_APP_API_URL"
 RUN npm run build
-RUN echo "Client build contents:" && ls -la build/
+RUN ls -la build/
 
 # Stage 2: Build and run server
 FROM node:18.19.1-slim
@@ -26,7 +33,6 @@ COPY --from=client-builder /app/client/build/ ./public/
 RUN echo "Public directory structure:" && tree public/
 
 # Set up environment
-COPY .env* ./
 ENV NODE_ENV=production
 ENV PORT=5000
 EXPOSE 5000
