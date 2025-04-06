@@ -1,16 +1,20 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// קביעת כתובת ה-API בהתאם לסביבה
+const baseURL = process.env.NODE_ENV === 'production'
+    ? 'https://catalog-app-b6cx9.ondigitalocean.app/api'
+    : 'http://localhost:5000/api';
 
+// יצירת מופע axios עם הגדרות בסיסיות
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
-    },
-    withCredentials: true
+    }
 });
 
-// Add token to requests if it exists
+// הוספת interceptor לטיפול בטוקן
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -19,23 +23,19 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Auth API
-export const authAPI = {
-    register: (userData) => api.post('/auth/register', userData),
-    login: (credentials) => api.post('/auth/login', credentials),
-    logout: () => api.post('/auth/logout'),
-    verifyToken: () => api.get('/auth/verify')
-};
-
 // Products API
 export const productsAPI = {
-    getAll: (page = 1) => api.get(`/products?page=${page}`),
-    getById: (id) => api.get(`/products/${id}`),
-    create: (productData) => api.post('/products', productData),
-    update: (id, productData) => api.put(`/products/${id}`, productData),
-    delete: (id) => api.delete(`/products/${id}`),
-    getStats: () => api.get('/products/stats'),
-    search: (query = '', page = 1) => api.get(`/products/search?query=${encodeURIComponent(query)}&page=${page}`)
+    getAll: (page) => api.get(`/products?page=${page}`),
+    search: (query, page) => api.get(`/products/search?query=${query}&page=${page}`),
+    getStats: () => api.get('/products/stats')
+};
+
+// Auth API
+export const authAPI = {
+    login: (credentials) => api.post('/auth/login', credentials),
+    register: (userData) => api.post('/auth/register', userData),
+    getProfile: () => api.get('/auth/profile'),
+    updateProfile: (userData) => api.put('/auth/profile', userData)
 };
 
 // Users API
