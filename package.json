@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "cd server && npm start",
-    "build": "cd client && npm install --legacy-peer-deps && npm run build && cd ../server && npm install --production --legacy-peer-deps",
+    "build": "cd client && npm install --legacy-peer-deps && npm run build && mkdir -p ../server/public && cp -r build/* ../server/public/ && cd ../server && npm install --production --legacy-peer-deps",
     "dev": "cd server && npm run dev"
   },
   "cacheDirectories": [
