@@ -16,14 +16,24 @@ app.get('/health', (req, res) => {
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://catalog-app-b6cx9.ondigitalocean.app']
-        : ['http://localhost:3000'],
+    origin: process.env.CORS_ORIGIN ? 
+        process.env.CORS_ORIGIN.split(',') : 
+        (process.env.NODE_ENV === 'production'
+            ? ['https://catalog-app-b6cx9.ondigitalocean.app']
+            : ['http://localhost:3000']),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    exposedHeaders: ['Content-Length', 'X-Requested-With'],
     optionsSuccessStatus: 200
 };
+
+// Debug CORS settings
+console.log('CORS Settings:', {
+    origin: corsOptions.origin,
+    environment: process.env.NODE_ENV,
+    corsOrigin: process.env.CORS_ORIGIN
+});
 
 // Middleware
 app.use(cors(corsOptions));
@@ -33,6 +43,7 @@ app.use(express.json());
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     console.log('Headers:', req.headers);
+    console.log('Origin:', req.get('origin'));
     next();
 });
 
@@ -56,8 +67,6 @@ if (process.env.NODE_ENV === 'production') {
 
 // MongoDB Connection Options
 const mongooseOptions = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
     family: 4,
@@ -76,9 +85,13 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/productsD
         
         // Seed data only in development
         if (process.env.NODE_ENV !== 'production') {
-            await seedUsers();
-            await seedProducts();
-            console.log('Data seeding completed');
+            try {
+                await seedUsers();
+                await seedProducts();
+                console.log('Data seeding completed');
+            } catch (error) {
+                console.error('Error seeding data:', error);
+            }
         }
     })
     .catch((error) => {
