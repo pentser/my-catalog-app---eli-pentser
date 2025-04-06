@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // קביעת כתובת ה-API מתוך משתני הסביבה
-const baseURL = process.env.REACT_APP_API_URL || 'https://catalog-app-b6cx9.ondigitalocean.app/api';
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 console.log('API Base URL:', baseURL);
 console.log('Environment:', process.env.REACT_APP_ENV);
