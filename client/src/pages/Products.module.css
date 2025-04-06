@@ -332,4 +332,14 @@
 
 .productImage img:hover {
     transform: scale(1.05);
+}
+
+.noProducts {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 1.2rem;
 } 

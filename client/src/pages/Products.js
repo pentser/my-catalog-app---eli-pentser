@@ -179,7 +179,7 @@ const Products = () => {
     const fetchProducts = async () => {
         try {
             let response;
-            if (searchQuery.trim()) {
+            if (searchQuery?.trim()) {
                 console.log('Searching products with query:', searchQuery, 'page:', page);
                 response = await productsAPI.search(searchQuery.trim(), page);
             } else {
@@ -187,12 +187,20 @@ const Products = () => {
                 response = await productsAPI.getAll(page);
             }
             console.log('Products response:', response.data);
-            setProducts(response.data.products);
-            setTotalPages(response.data.totalPages);
+            if (response?.data?.products) {
+                setProducts(response.data.products);
+                setTotalPages(response.data.totalPages || 1);
+            } else {
+                setProducts([]);
+                setTotalPages(1);
+                setError('לא נמצאו מוצרים');
+            }
         } catch (err) {
             console.error('Error fetching products:', err);
             const errorMessage = err.response?.data?.error || err.message || 'שגיאה בטעינת המוצרים';
             setError(errorMessage);
+            setProducts([]);
+            setTotalPages(1);
         }
     };
 
@@ -297,14 +305,20 @@ const Products = () => {
             {success && <div className={styles.success}>{success}</div>}
 
             <div className={styles.productsGrid}>
-                {products.map((product) => (
-                    <ProductCard
-                        key={product.product_id}
-                        product={product}
-                        onEdit={handleEdit}
-                        onDelete={handleDeleteProduct}
-                    />
-                ))}
+                {Array.isArray(products) && products.length > 0 ? (
+                    products.map((product) => (
+                        <ProductCard
+                            key={product.product_id}
+                            product={product}
+                            onEdit={handleEdit}
+                            onDelete={handleDeleteProduct}
+                        />
+                    ))
+                ) : (
+                    <div className={styles.noProducts}>
+                        {error ? error : 'לא נמצאו מוצרים'}
+                    </div>
+                )}
             </div>
 
             <div className={styles.pagination}>
